@@ -579,10 +579,9 @@ void loop() {
         static uint32_t lastHb = 0;
         if (now - lastHb > 5000) {
             lastHb = now;
-            Serial.printf("[hb] t=%lu phase=%d screen=%d btnA=%d btnB=%d touch=%d chg=%d bat=%d%% %dmV\n",
-                          (unsigned long)now, (int)round_.phase(), (int)power_.screen(), M5.BtnA.isPressed(),
-                          M5.BtnB.isPressed(), M5.Touch.getCount(), (int)M5.Power.isCharging(),
-                          (int)M5.Power.getBatteryLevel(), (int)M5.Power.getBatteryVoltage());
+            Serial.printf("[hb] t=%lu phase=%d screen=%d btnA=%d btnB=%d touch=%d chg=%d\n", (unsigned long)now,
+                          (int)round_.phase(), (int)power_.screen(), M5.BtnA.isPressed(), M5.BtnB.isPressed(),
+                          M5.Touch.getCount(), (int)M5.Power.isCharging());
         }
         if (M5.BtnA.wasPressed()) Serial.println("[btn] A down");
         if (M5.BtnB.wasPressed()) Serial.println("[btn] B down");
