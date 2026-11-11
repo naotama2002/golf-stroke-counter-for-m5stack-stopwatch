@@ -67,6 +67,7 @@ static int toastHole = 0, toastStrokes = 0, toastTotal = 0;
 static uint32_t hopUntil = 0;    // ボールくんジャンプ
 static uint32_t lastInputMs = 0;
 static bool dirty = true;
+static int batteryPct = -1;  // 画面に出す電池残量。操作時にだけ読み直す
 static String diagLine;
 static int W = 466, H = 466, CX = 233, CY = 233;
 
@@ -325,8 +326,30 @@ static void renderFinished() {
     drawTextC("TOP", CX, rTop.y + (rTop.h - textHeight(4)) / 2, 4, C_INK);
 }
 
+// 電池残量: 円形画面の上端中央に小さく表示
+static void refreshBattery() {
+    int v = M5.Power.getBatteryLevel();
+    batteryPct = (v >= 0 && v <= 100) ? v : -1;
+}
+
+static void drawBattery() {
+    char buf[8];
+    if (batteryPct >= 0) snprintf(buf, sizeof(buf), "%d%%", batteryPct);
+    else snprintf(buf, sizeof(buf), "--");
+    const int px = 2, iconW = 22, iconH = 12, gap = 6;
+    int tw = textWidth(buf, px);
+    int x = CX - (iconW + 3 + gap + tw) / 2;
+    int y = 10;
+    uint16_t fill = (batteryPct >= 0 && batteryPct <= 20) ? lgfx::color565(255, 90, 60) : C_LIME;
+    canvas.drawRect(x, y, iconW, iconH, C_GRAY);
+    canvas.fillRect(x + iconW, y + 3, 3, iconH - 6, C_GRAY);
+    if (batteryPct > 0) canvas.fillRect(x + 2, y + 2, (iconW - 4) * batteryPct / 100, iconH - 4, fill);
+    drawText(buf, x + iconW + 3 + gap, y - 1, px, C_GRAY);
+}
+
 static void render() {
     canvas.fillScreen(C_PAPER);
+    drawBattery();
     if (fixIndex >= 0) renderFix();
     else if (confirmEnd) renderConfirm();
     else if (millis() < toastUntil) renderToast();
@@ -470,6 +493,7 @@ static bool acceptInput() {
     bool pass = power_.onInput(now);
     if (wasOff || wasDim) applyScreen(Screen::Active);
     dirty = true;
+    refreshBattery();
     return pass;
 }
 
@@ -560,6 +584,7 @@ void setup() {
     M5.Display.setBrightness(cfg::kBrightActive);
     lastInputMs = millis();
     power_.onInput(lastInputMs);
+    refreshBattery();
     render();
 }
 
